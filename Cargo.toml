@@ -1,0 +1,30 @@
+[package]
+name = "alone"
+version = "0.1.0"
+authors = ["n01e0 <noleo@vanillabeans.mobi>"]
+edition = "2018"
+description = """
+
+ .S_SSSs    S.        sSSs_sSSs     .S_sSSs      sSSs
+ .SS~SSSSS   SS.      d%%SP~YS%%b   .SS~YS%%b    d%%SP
+ S%S   SSSS  S%S     d%S'     `S%b  S%S   `S%b  d%S'
+ S%S    S%S  S%S     S%S       S%S  S%S    S%S  S%S
+ S%S SSSS%S  S&S     S&S       S&S  S%S    S&S  S&S
+ S&S  SSS%S  S&S     S&S       S&S  S&S    S&S  S&S_Ss
+ S&S    S&S  S&S     S&S       S&S  S&S    S&S  S&S~SP
+ S&S    S&S  S&S     S&S       S&S  S&S    S&S  S&S
+ S*S    S&S  S*b     S*b       d*S  S*S    S*S  S*b
+ S*S    S*S  S*S.    S*S.     .S*S  S*S    S*S  S*S.
+ S*S    S*S   SSSbs   SSSbs_sdSSS   S*S    S*S   SSSbs
+ SSS    S*S    YSSP    YSSP~YSSY    S*S    SSS    YSSP
+        SP                          SP
+        Y                           Y
+
+A Lisp or not enough
+"""
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+clap = "2.33.1"
+codespan = "0.9.5"
