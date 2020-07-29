@@ -14,6 +14,7 @@ pub enum Value {
 impl Value {
     pub fn is_truthy(&self) -> bool {
         match self {
+            Value::Nil => false,
             Value::Number(n) => *n != 0,
             _ => true,
         }
@@ -22,6 +23,7 @@ impl Value {
     pub fn into_num(self) -> i64 {
         match self {
             Value::Number(n) => n,
+            Value::Nil => 0,
             other => panic!("Can't use {:?}, it isn't number", other),
         }
     }

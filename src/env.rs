@@ -65,19 +65,69 @@ pub fn make_global_env() -> HashMap<String, Value> {
     env.insert(
         S("/"),
         Value::Callable(|values| {
-                if let Some((first, rest)) = values.split_first() {
-                    let first = first.into_num();
-                    Ok(Value::Number(
-                            if rest.is_empty() {
-                                1 / first
-                            } else {
-                                rest.iter().fold(first, |n, m| n / m.into_num())
-                            }
-                    ))
-                } else {
-                    Err(EvalError(S("Wrong number of arguments: /, 0")))
-                }
+            if let Some((first, rest)) = values.split_first() {
+                let first = first.into_num();
+                Ok(Value::Number(
+                        if rest.is_empty() {
+                            1 / first
+                        } else {
+                            rest.iter().fold(first, |n, m| n / m.into_num())
+                        }
+                ))
+            } else {
+                Err(EvalError(S("Wrong number of arguments: /, 0")))
+            }
         })
+    );
+
+    env.insert(
+        S("="),
+        Value::Callable(|values| {
+            let first = values.first().unwrap().into_num();
+            Ok(
+                if values.iter().any(|x| x.into_num() != first) {
+                    Value::Nil
+                } else {
+                    Value::Number(1)
+                }
+            )
+        }
+    ));
+
+    env.insert(
+        S("<"),
+        Value::Callable(|values| {
+            let mut sorted = values.clone().iter().map(|x| x.into_num()).collect::<Vec<_>>();
+            sorted.sort();
+            Ok(
+                if values.iter().map(|x| x.into_num()).eq(sorted) {
+                    Value::Number(1)
+                } else {
+                    Value::Nil
+                }
+            )
+        }
+    ));
+
+    env.insert(
+        S(">"),
+        Value::Callable(|values| {
+            let mut sorted = values.clone().iter().map(|x| x.into_num()).collect::<Vec<_>>();
+            sorted.sort();
+            sorted.reverse();
+            Ok(
+                if values.iter().map(|x| x.into_num()).eq(sorted) {
+                    Value::Number(1)
+                } else {
+                    Value::Nil
+                }
+            )
+        }
+    ));
+
+    env.insert(
+        S("t"), 
+        Value::Number(1)
     );
 
     env
