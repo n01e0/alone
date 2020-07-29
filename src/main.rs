@@ -4,6 +4,7 @@ extern crate clap;
 mod ast;
 mod parse;
 mod eval;
+mod env;
 
 fn main() {
     let matches = clap_app!(alone => 
@@ -18,7 +19,7 @@ fn main() {
         print(eval::eval(parse::parse(&source)));
     } else {
         println!("{}", crate_description!());
-        let mut env = eval::make_global_env();
+        let mut env = env::make_global_env();
         loop {
             print(eval::eval_with_env(read(), &mut env))
         }

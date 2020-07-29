@@ -135,7 +135,7 @@ where I: Iterator<Item = ast::Token>
                         close,
                     )
                 },
-                "define" => {
+                "setq" => {
                     let define_tok = self.0.next().unwrap();
                     let sym_tok = self.0.next().unwrap();
                     let value = self.parse_expr();
