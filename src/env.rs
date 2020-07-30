@@ -97,11 +97,14 @@ pub fn make_global_env() -> HashMap<String, Value> {
     env.insert(
         S("<"),
         Value::Callable(|values| {
-            let mut sorted = values.clone().iter().map(|x| x.into_num()).collect::<Vec<_>>();
-            sorted.sort();
+            let vs = Values::from(values);
             Ok(
-                if values.iter().map(|x| x.into_num()).eq(sorted) {
-                    Value::Number(1)
+                if let Some(v) = vs.to_tuples() {
+                    if v.iter().filter(|(a, b)| !(a.into_num() < b.into_num())).collect::<Vec<_>>().is_empty() {
+                        Value::Number(1)
+                    } else {
+                        Value::Nil
+                    }
                 } else {
                     Value::Nil
                 }
@@ -112,12 +115,50 @@ pub fn make_global_env() -> HashMap<String, Value> {
     env.insert(
         S(">"),
         Value::Callable(|values| {
-            let mut sorted = values.clone().iter().map(|x| x.into_num()).collect::<Vec<_>>();
-            sorted.sort();
-            sorted.reverse();
+            let vs = Values::from(values);
             Ok(
-                if values.iter().map(|x| x.into_num()).eq(sorted) {
-                    Value::Number(1)
+                if let Some(v) = vs.to_tuples() {
+                    if v.iter().filter(|(a, b)| !(a.into_num() > b.into_num())).collect::<Vec<_>>().is_empty() {
+                        Value::Number(1)
+                    } else {
+                        Value::Nil
+                    }
+                } else {
+                    Value::Nil
+                }
+            )
+        }
+    ));
+
+    env.insert(
+        S("<="),
+        Value::Callable(|values| {
+            let vs = Values::from(values);
+            Ok(
+                if let Some(v) = vs.to_tuples() {
+                    if v.iter().filter(|(a, b)| !(a.into_num() <= b.into_num())).collect::<Vec<_>>().is_empty() {
+                        Value::Number(1)
+                    } else {
+                        Value::Nil
+                    }
+                } else {
+                    Value::Nil
+                }
+            )
+        }
+    ));
+    
+    env.insert(
+        S(">="),
+        Value::Callable(|values| {
+            let vs = Values::from(values);
+            Ok(
+                if let Some(v) = vs.to_tuples() {
+                    if v.iter().filter(|(a, b)| !(a.into_num() >= b.into_num())).collect::<Vec<_>>().is_empty() {
+                        Value::Number(1)
+                    } else {
+                        Value::Nil
+                    }
                 } else {
                     Value::Nil
                 }
@@ -135,4 +176,26 @@ pub fn make_global_env() -> HashMap<String, Value> {
 
 fn last_or_nil(values: Vec<Value>) -> Value {
     values.last().cloned().unwrap_or(Value::Nil)
+}
+
+struct Values(Vec<Value>);
+impl Values {
+    pub fn from(v: Vec<Value>) -> Self {
+        Self(v)
+    }
+
+    pub fn to_tuples(&self) -> Option<Vec<(Value, Value)>> {
+        if self.0.len() < 2 {
+            None
+        } else {
+            let mut ret = Vec::new();
+            for (i, v) in self.0.iter().enumerate() {
+                match self.0.iter().nth(i + 1) {
+                    Some(n) => ret.push((*v, *n)),
+                    None => break
+                }
+            }
+            Some(ret)
+        }
+    }
 }
