@@ -4,10 +4,20 @@ use super::env::make_global_env;
 use std::collections::HashMap;
 use std::fmt;
 
-#[derive(Debug, PartialEq, Copy, Clone)]
+#[derive(Debug, PartialEq, Clone)]
+pub struct Cons(Box<Value>, Box<Value>);
+
+impl Cons {
+    pub fn new(a: Value, b: Value) -> Self {
+        Cons(Box::new(a), Box::new(b))
+    }
+}
+
+#[derive(Debug, PartialEq, Clone)]
 pub enum Value {
     Number(i64),
     Callable(Callable),
+    Cons(Cons),
     Nil
 }
 
@@ -22,6 +32,7 @@ impl Value {
 
     pub fn into_num(self) -> i64 {
         match self {
+            Value::Cons(cons) => cons.0.into_num(),
             Value::Number(n) => n,
             Value::Nil => 0,
             other => panic!("Can't use {:?}, it isn't number", other),
@@ -34,6 +45,7 @@ impl fmt::Display for Value {
         match self {
             Value::Number(n) => write!(f, "{}", n),
             Value::Callable(c) => write!(f, "<callable {:x?}>", c),
+            Value::Cons(c) => write!(f, "({}, {})", c.0, c.1),
             Value::Nil => write!(f, "Nil"),
         }
     }

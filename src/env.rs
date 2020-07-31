@@ -1,6 +1,7 @@
 use super::eval::*;
 use std::collections::HashMap;
 use big_s::S;
+use itertools::Itertools;
 
 pub fn make_global_env() -> HashMap<String, Value> {
     let mut env = HashMap::new();
@@ -33,14 +34,14 @@ pub fn make_global_env() -> HashMap<String, Value> {
     env.insert(
         S("+"),
         Value::Callable(|values| {
-            Ok(Value::Number(values.iter().map(|n| n.into_num()).sum()))
+            Ok(Value::Number(values.iter().map(|n| n.clone().into_num()).sum()))
         })
     );
 
     env.insert(
         S("*"),
         Value::Callable(|values| {
-            Ok(Value::Number(values.iter().map(|n| n.into_num()).product()))
+            Ok(Value::Number(values.iter().map(|n| n.clone().into_num()).product()))
         })
     );
 
@@ -49,11 +50,11 @@ pub fn make_global_env() -> HashMap<String, Value> {
         Value::Callable(|values| {
             Ok(Value::Number(
                 if let Some((first, rest)) = values.split_first() {
-                    let first = first.into_num();
+                    let first = first.clone().into_num();
                     if rest.is_empty() {
                         -first
                     } else {
-                        rest.iter().fold(first, |n, m| n - m.into_num())
+                        rest.iter().fold(first, |n, m| n - m.clone().into_num())
                     }
                 } else {
                     0
@@ -66,12 +67,12 @@ pub fn make_global_env() -> HashMap<String, Value> {
         S("/"),
         Value::Callable(|values| {
             if let Some((first, rest)) = values.split_first() {
-                let first = first.into_num();
+                let first = first.clone().into_num();
                 Ok(Value::Number(
                         if rest.is_empty() {
                             1 / first
                         } else {
-                            rest.iter().fold(first, |n, m| n / m.into_num())
+                            rest.iter().fold(first, |n, m| n / m.clone().into_num())
                         }
                 ))
             } else {
@@ -83,9 +84,9 @@ pub fn make_global_env() -> HashMap<String, Value> {
     env.insert(
         S("="),
         Value::Callable(|values| {
-            let first = values.first().unwrap().into_num();
+            let first = values.first().unwrap().clone().into_num();
             Ok(
-                if values.iter().any(|x| x.into_num() != first) {
+                if values.iter().any(|x| x.clone().into_num() != first) {
                     Value::Nil
                 } else {
                     Value::Number(1)
@@ -100,7 +101,7 @@ pub fn make_global_env() -> HashMap<String, Value> {
             let vs = Values::from(values);
             Ok(
                 if let Some(v) = vs.to_tuples() {
-                    if v.iter().filter(|(a, b)| !(a.into_num() < b.into_num())).collect::<Vec<_>>().is_empty() {
+                    if v.iter().filter(|(a, b)| !(a.clone().into_num() < b.clone().into_num())).collect::<Vec<_>>().is_empty() {
                         Value::Number(1)
                     } else {
                         Value::Nil
@@ -118,7 +119,7 @@ pub fn make_global_env() -> HashMap<String, Value> {
             let vs = Values::from(values);
             Ok(
                 if let Some(v) = vs.to_tuples() {
-                    if v.iter().filter(|(a, b)| !(a.into_num() > b.into_num())).collect::<Vec<_>>().is_empty() {
+                    if v.iter().filter(|(a, b)| !(a.clone().into_num() > b.clone().into_num())).collect::<Vec<_>>().is_empty() {
                         Value::Number(1)
                     } else {
                         Value::Nil
@@ -136,7 +137,7 @@ pub fn make_global_env() -> HashMap<String, Value> {
             let vs = Values::from(values);
             Ok(
                 if let Some(v) = vs.to_tuples() {
-                    if v.iter().filter(|(a, b)| !(a.into_num() <= b.into_num())).collect::<Vec<_>>().is_empty() {
+                    if v.iter().filter(|(a, b)| !(a.clone().into_num() <= b.clone().into_num())).collect::<Vec<_>>().is_empty() {
                         Value::Number(1)
                     } else {
                         Value::Nil
@@ -154,7 +155,7 @@ pub fn make_global_env() -> HashMap<String, Value> {
             let vs = Values::from(values);
             Ok(
                 if let Some(v) = vs.to_tuples() {
-                    if v.iter().filter(|(a, b)| !(a.into_num() >= b.into_num())).collect::<Vec<_>>().is_empty() {
+                    if v.iter().filter(|(a, b)| !(a.clone().into_num() >= b.clone().into_num())).collect::<Vec<_>>().is_empty() {
                         Value::Number(1)
                     } else {
                         Value::Nil
@@ -165,6 +166,17 @@ pub fn make_global_env() -> HashMap<String, Value> {
             )
         }
     ));
+
+    env.insert(
+        S("cons"),
+        Value::Callable(|values|{
+            if let Some((a, b)) = values.iter().next_tuple()  {
+                Ok(Value::Cons(Cons::new(a.clone(), b.clone())))
+            } else {
+                Ok(Value::Nil)
+            }
+        })
+    );
 
     env.insert(
         S("t"), 
@@ -191,7 +203,7 @@ impl Values {
             let mut ret = Vec::new();
             for (i, v) in self.0.iter().enumerate() {
                 match self.0.iter().nth(i + 1) {
-                    Some(n) => ret.push((*v, *n)),
+                    Some(n) => ret.push((v.clone(), n.clone())),
                     None => break
                 }
             }
