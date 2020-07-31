@@ -1,6 +1,7 @@
 use super::eval::*;
 use std::collections::HashMap;
 use big_s::S;
+use itertools::Itertools;
 
 pub fn make_global_env() -> HashMap<String, Value> {
     let mut env = HashMap::new();
@@ -165,6 +166,17 @@ pub fn make_global_env() -> HashMap<String, Value> {
             )
         }
     ));
+
+    env.insert(
+        S("cons"),
+        Value::Callable(|values|{
+            if let Some((a, b)) = values.iter().next_tuple()  {
+                Ok(Value::Cons(Cons::new(a.clone(), b.clone())))
+            } else {
+                Ok(Value::Nil)
+            }
+        })
+    );
 
     env.insert(
         S("t"), 

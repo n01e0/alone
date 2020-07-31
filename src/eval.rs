@@ -7,6 +7,12 @@ use std::fmt;
 #[derive(Debug, PartialEq, Clone)]
 pub struct Cons(Box<Value>, Box<Value>);
 
+impl Cons {
+    pub fn new(a: Value, b: Value) -> Self {
+        Cons(Box::new(a), Box::new(b))
+    }
+}
+
 #[derive(Debug, PartialEq, Clone)]
 pub enum Value {
     Number(i64),
