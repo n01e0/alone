@@ -4,10 +4,14 @@ use super::env::make_global_env;
 use std::collections::HashMap;
 use std::fmt;
 
-#[derive(Debug, PartialEq, Copy, Clone)]
+#[derive(Debug, PartialEq, Clone)]
+pub struct Cons(Box<Value>, Box<Value>);
+
+#[derive(Debug, PartialEq, Clone)]
 pub enum Value {
     Number(i64),
     Callable(Callable),
+    Cons(Cons),
     Nil
 }
 
@@ -34,6 +38,7 @@ impl fmt::Display for Value {
         match self {
             Value::Number(n) => write!(f, "{}", n),
             Value::Callable(c) => write!(f, "<callable {:x?}>", c),
+            Value::Cons(c) => write!(f, "({}, {})", c.0, c.1),
             Value::Nil => write!(f, "Nil"),
         }
     }
