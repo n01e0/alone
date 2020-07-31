@@ -32,6 +32,7 @@ impl Value {
 
     pub fn into_num(self) -> i64 {
         match self {
+            Value::Cons(cons) => cons.0.into_num(),
             Value::Number(n) => n,
             Value::Nil => 0,
             other => panic!("Can't use {:?}, it isn't number", other),
