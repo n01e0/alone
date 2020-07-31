@@ -173,6 +173,10 @@ where I: Iterator<Item = ast::Token>
 
 pub fn parse(source: &str) -> ast::Expr {
     let tokens = tokenise(source);
+    if tokens.len() < 1 {
+        println!("bye");
+        std::process::exit(0)
+    }
     ParseState(tokens.into_iter().peekable()).parse_expr()
 }
 
