@@ -179,6 +179,26 @@ pub fn make_global_env() -> HashMap<String, Value> {
     );
 
     env.insert(
+        S("car"),
+        Value::Callable(|values|{
+            match values.first() {
+                Some(Value::Cons(cons)) => Ok(cons.clone().car()),
+                _ => Err(EvalError(S("Wrong argument type: car require cons")))
+            }
+        })
+    );
+
+    env.insert(
+        S("cdr"),
+        Value::Callable(|values|{
+            match values.first() {
+                Some(Value::Cons(cons)) => Ok(cons.clone().cdr()),
+                _ => Err(EvalError(S("Wrong argument type: car require cons")))
+            }
+        })
+    );
+    
+    env.insert(
         S("t"), 
         Value::Number(1)
     );

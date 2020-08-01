@@ -8,8 +8,16 @@ use std::fmt;
 pub struct Cons(Box<Value>, Box<Value>);
 
 impl Cons {
-    pub fn new(a: Value, b: Value) -> Self {
-        Cons(Box::new(a), Box::new(b))
+    pub fn new(car: Value, cdr: Value) -> Self {
+        Cons(Box::new(car), Box::new(cdr))
+    }
+
+    pub fn car(&self) -> Value {
+        *self.0.clone()
+    }
+
+    pub fn cdr(&self) -> Value {
+        *self.1.clone()
     }
 }
 
