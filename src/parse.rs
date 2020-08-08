@@ -207,6 +207,7 @@ mod test_parse {
     use crate::{ast, parse};
     use big_s::S;
     use codespan::*;
+    use ast::{Expr, Token, TokenKind};
 
     #[test]
     fn tokenise_symbol() {
@@ -228,27 +229,21 @@ mod test_parse {
 
     #[test]
     fn parse_expr() {
-        use ast::{Expr, Token, TokenKind};
         let src = "(if 1 1 2)";
         assert_eq!(
             parse::parse(src),
             Expr::If(
                 Token::with_span(TokenKind::LeftBracket, Span::new(1, 2)),
                 Token::with_span(TokenKind::Symbol(S("if")), Span::new(2, 4)),
-                Box::new(Expr::Number(
-                    Token::with_span(TokenKind::Number(1), Span::new(5, 6)),
-                    1
-                )),
-                Box::new(Expr::Number(
-                    Token::with_span(TokenKind::Number(1), Span::new(7, 8)),
-                    1
-                )),
-                Box::new(Expr::Number(
-                    Token::with_span(TokenKind::Number(2), Span::new(9, 10)),
-                    2
-                )),
+                Box::new(create_number(1, (5, 6))),
+                Box::new(create_number(1, (7, 8))),
+                Box::new(create_number(2, (9, 10))),
                 Token::with_span(TokenKind::RightBracket, Span::new(10, 11))
             )
         );
+    }
+
+    fn create_number(n: i64, span: (u32, u32)) -> Expr {
+        Expr::Number(Token::with_span(TokenKind::Number(n), Span::new(span.0, span.1)), n)
     }
 }
