@@ -205,9 +205,9 @@ pub fn parse(source: &str) -> ast::Expr {
 #[cfg(test)]
 mod test_parse {
     use crate::{ast, parse};
+    use ast::{Expr, Token, TokenKind};
     use big_s::S;
     use codespan::*;
-    use ast::{Expr, Token, TokenKind};
 
     #[test]
     fn tokenise_symbol() {
@@ -244,6 +244,9 @@ mod test_parse {
     }
 
     fn create_number(n: i64, span: (u32, u32)) -> Expr {
-        Expr::Number(Token::with_span(TokenKind::Number(n), Span::new(span.0, span.1)), n)
+        Expr::Number(
+            Token::with_span(TokenKind::Number(n), Span::new(span.0, span.1)),
+            n,
+        )
     }
 }
