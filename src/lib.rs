@@ -1,4 +1,4 @@
 pub mod ast;
-pub mod parse;
-pub mod eval;
 pub mod env;
+pub mod eval;
+pub mod parse;

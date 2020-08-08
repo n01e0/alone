@@ -26,7 +26,7 @@ pub enum Value {
     Number(i64),
     Callable(Callable),
     Cons(Cons),
-    Nil
+    Nil,
 }
 
 impl Value {
@@ -79,7 +79,10 @@ pub fn eval(expr: ast::Expr) -> EvalResult {
 pub fn eval_with_env(expr: ast::Expr, env: &mut HashMap<String, Value>) -> EvalResult {
     use ast::Expr::*;
     match expr {
-        Symbol(_, s) => env.get(&s).cloned().ok_or_else(|| EvalError(format!("eval: Undefined symbol {}", s))),
+        Symbol(_, s) => env
+            .get(&s)
+            .cloned()
+            .ok_or_else(|| EvalError(format!("eval: Undefined symbol {}", s))),
         Number(_, n) => Ok(Value::Number(n)),
         If(_, _, cond, true_then, false_then, _) => {
             let expr = if eval_with_env(*cond, env)?.is_truthy() {
@@ -88,23 +91,20 @@ pub fn eval_with_env(expr: ast::Expr, env: &mut HashMap<String, Value>) -> EvalR
                 false_then
             };
             Ok(eval_with_env(*expr, env)?)
-        },
+        }
         Define(_, _, sym, value, _) => {
             let value = eval_with_env(*value, env)?;
             let sym = to_sym(sym)?;
             env.insert(sym, value.clone());
             Ok(value)
-        },
+        }
         Call(_, sym, args, _) => {
             let sym = to_sym(sym)?;
             match env.get(&sym) {
-                Some(Value::Callable(c)) => {
-                    c(args
-                        .into_iter()
-                        .map(|expr| eval_with_env(expr, env))
-                        .collect::<Result<Vec<_>, _>>()?
-                    )
-                },
+                Some(Value::Callable(c)) => c(args
+                    .into_iter()
+                    .map(|expr| eval_with_env(expr, env))
+                    .collect::<Result<Vec<_>, _>>()?),
                 _ => Err(EvalError(format!("eval: Invalid function {}", sym))),
             }
         }
