@@ -93,6 +93,27 @@ pub fn make_global_env() -> HashMap<String, Value> {
         }),
     );
 
+    env.insert(S("eq"), env["="].clone());
+
+    env.insert(
+        S("!"),
+        Value::Callable(|values| {
+            match values.len() {
+                1 => {
+                    Ok(if values.first().unwrap().is_truthy() {
+                        Value::Nil 
+                    }else {
+                        Value::Number(1)
+                    })
+                },
+                n if n > 1 => Err(EvalError(S("too many arguments given to NOT"))),
+                _ => Err(EvalError(S("too few arguments givien to NOT"))),
+            }
+        })
+    );
+
+    env.insert(S("not"), env["!"].clone());
+
     env.insert(
         S("<"),
         Value::Callable(|values| {
@@ -198,6 +219,11 @@ pub fn make_global_env() -> HashMap<String, Value> {
             Some(Value::Cons(cons)) => Ok(cons.clone().cdr()),
             _ => Err(EvalError(S("Wrong argument type: car require cons"))),
         }),
+    );
+    
+    env.insert(
+        S("T"), 
+        Value::Number(1)
     );
 
     env.insert(S("t"), Value::Number(1));
