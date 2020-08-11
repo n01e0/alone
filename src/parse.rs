@@ -9,6 +9,7 @@ enum TokeniseState {
     Symbol,
     Whitespace,
     Comment,
+    Str,
 }
 
 fn tokenise(source: &str) -> Vec<ast::Token> {
@@ -46,6 +47,7 @@ fn tokenise(source: &str) -> Vec<ast::Token> {
                     | '@'
                     | '$'
                     | '^' => Some(Symbol),
+                    '"' => Some(Str),
                     c if c.is_whitespace() => Some(Whitespace),
                     _ => None,
                 },
@@ -90,6 +92,13 @@ fn tokenise(source: &str) -> Vec<ast::Token> {
                         Some(Comment)
                     }
                 }
+                Str => {
+                    if c == '"' {
+                        None
+                    } else {
+                        Some(Str)
+                    }
+                }
             };
 
             if let Some(next_state) = next {
@@ -111,6 +120,7 @@ fn tokenise(source: &str) -> Vec<ast::Token> {
             Rparen => ast::TokenKind::RightBracket,
             Number => ast::TokenKind::Number(token_str.parse().unwrap()),
             Symbol => ast::TokenKind::Symbol(token_str.to_string()),
+            Str => ast::TokenKind::Str(token_str.to_string()),
             Whitespace | Comment => continue,
         };
 
@@ -137,6 +147,7 @@ where
                 LeftBracket => self.parse_form(token),
                 RightBracket => panic!("unexpected token!"),
                 Number(n) => ast::Expr::Number(token, n),
+                Str(s) => ast::Expr::Str(s[1..].into()),
                 Symbol(ref s) => {
                     let sym = s.clone();
                     ast::Expr::Symbol(token, sym)
@@ -188,7 +199,7 @@ where
                     ast::Expr::Call(open, sym_tok, args, close)
                 }
             },
-            _ => panic!("invalid expression"),
+            other => panic!("invalid expression -> {:?}", other),
         }
     }
 }

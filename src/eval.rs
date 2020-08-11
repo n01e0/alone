@@ -26,6 +26,7 @@ pub enum Value {
     Number(i64),
     Callable(Callable),
     Cons(Cons),
+    Str(String),
     Nil,
 }
 
@@ -54,6 +55,7 @@ impl fmt::Display for Value {
             Value::Number(n) => write!(f, "{}", n),
             Value::Callable(c) => write!(f, "<callable {:x?}>", c),
             Value::Cons(c) => write!(f, "({}, {})", c.0, c.1),
+            Value::Str(s) => write!(f, "\"{}\"", s),
             Value::Nil => write!(f, "Nil"),
         }
     }
@@ -84,6 +86,7 @@ pub fn eval_with_env(expr: ast::Expr, env: &mut HashMap<String, Value>) -> EvalR
             .cloned()
             .ok_or_else(|| EvalError(format!("eval: Undefined symbol {}", s))),
         Number(_, n) => Ok(Value::Number(n)),
+        Str(s) => Ok(Value::Str(s)),
         If(_, _, cond, true_then, false_then, _) => {
             let expr = if eval_with_env(*cond, env)?.is_truthy() {
                 true_then

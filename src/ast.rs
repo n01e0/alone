@@ -12,6 +12,7 @@ pub enum TokenKind {
     RightBracket,
     Number(i64),
     Symbol(String),
+    Str(String),
 }
 
 impl Token {
@@ -23,6 +24,7 @@ impl Token {
 #[derive(Debug, PartialEq)]
 pub enum Expr {
     Symbol(Token, String),
+    Str(String),
     Number(Token, i64),
     If(Token, Token, Box<Expr>, Box<Expr>, Box<Expr>, Token),
     Define(Token, Token, Token, Box<Expr>, Token),
