@@ -109,7 +109,10 @@ fn tokenise(source: &str) -> Vec<ast::Token> {
             }
         }
 
-        let token_str = &source[start..end];
+        let token_str = match state {
+            Str => &source[start+1..end],
+            _ => &source[start..end],
+        };
         let span = Span::new(ByteIndex::from(start as u32), ByteIndex::from(end as u32));
 
         start = end;
@@ -147,7 +150,7 @@ where
                 LeftBracket => self.parse_form(token),
                 RightBracket => panic!("unexpected token!"),
                 Number(n) => ast::Expr::Number(token, n),
-                Str(s) => ast::Expr::Str(s[1..].into()),
+                Str(s) => ast::Expr::Str(s.into()),
                 Symbol(ref s) => {
                     let sym = s.clone();
                     ast::Expr::Symbol(token, sym)
