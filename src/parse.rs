@@ -1,5 +1,5 @@
-use codespan::*;
 use super::ast;
+use codespan::*;
 
 enum TokeniseState {
     Start,
@@ -9,6 +9,7 @@ enum TokeniseState {
     Symbol,
     Whitespace,
     Comment,
+    Str,
 }
 
 fn tokenise(source: &str) -> Vec<ast::Token> {
@@ -28,24 +29,54 @@ fn tokenise(source: &str) -> Vec<ast::Token> {
                     ')' => Some(Rparen),
                     '0'..='9' => Some(Number),
                     ';' => Some(Comment),
-                    'a'..='z'|'A'..='Z'
-                    |'!'|'%'|'&'|'*'|'+'|'-'|'.'|'/'|':'|'<'|'>'|'='|'?'|'@'|'$'|'^'
-                        => Some(Symbol),
+                    'a'..='z'
+                    | 'A'..='Z'
+                    | '!'
+                    | '%'
+                    | '&'
+                    | '*'
+                    | '+'
+                    | '-'
+                    | '.'
+                    | '/'
+                    | ':'
+                    | '<'
+                    | '>'
+                    | '='
+                    | '?'
+                    | '@'
+                    | '$'
+                    | '^' => Some(Symbol),
+                    '"' => Some(Str),
                     c if c.is_whitespace() => Some(Whitespace),
                     _ => None,
-                }
+                },
                 Lparen | Rparen => None,
                 Number => match c {
                     '0'..='9' => Some(Number),
-                    _ => None
+                    _ => None,
                 },
-                Symbol => {
-                    match c {
-                        'a'..='z'|'A'..='Z'
-                        |'!'|'%'|'&'|'*'|'+'|'-'|'.'|'/'|':'|'<'|'>'|'='|'?'|'@'|'$'|'^'
-                        |'0'..='9' => Some(Symbol),
-                        _ => None,
-                    }
+                Symbol => match c {
+                    'a'..='z'
+                    | 'A'..='Z'
+                    | '!'
+                    | '%'
+                    | '&'
+                    | '*'
+                    | '+'
+                    | '-'
+                    | '.'
+                    | '/'
+                    | ':'
+                    | '<'
+                    | '>'
+                    | '='
+                    | '?'
+                    | '@'
+                    | '$'
+                    | '^'
+                    | '0'..='9' => Some(Symbol),
+                    _ => None,
                 },
                 Whitespace => {
                     if c.is_whitespace() {
@@ -53,12 +84,19 @@ fn tokenise(source: &str) -> Vec<ast::Token> {
                     } else {
                         None
                     }
-                },
+                }
                 Comment => {
                     if c == '\r' || c == '\n' {
                         None
                     } else {
                         Some(Comment)
+                    }
+                }
+                Str => {
+                    if c == '"' {
+                        None
+                    } else {
+                        Some(Str)
                     }
                 }
             };
@@ -82,10 +120,14 @@ fn tokenise(source: &str) -> Vec<ast::Token> {
             Rparen => ast::TokenKind::RightBracket,
             Number => ast::TokenKind::Number(token_str.parse().unwrap()),
             Symbol => ast::TokenKind::Symbol(token_str.to_string()),
+            Str => ast::TokenKind::Str(token_str.to_string()),
             Whitespace | Comment => continue,
         };
 
-        let span = Span::new(ByteIndex::from(span.start().to_usize() as u32 + 1), ByteIndex::from(span.end().to_usize() as u32 + 1));
+        let span = Span::new(
+            ByteIndex::from(span.start().to_usize() as u32 + 1),
+            ByteIndex::from(span.end().to_usize() as u32 + 1),
+        );
         ret.push(ast::Token::with_span(kind, span));
     }
 
@@ -95,8 +137,9 @@ fn tokenise(source: &str) -> Vec<ast::Token> {
 struct ParseState<I: Iterator<Item = ast::Token>>(std::iter::Peekable<I>);
 use ast::TokenKind::*;
 
-impl<I> ParseState<I> 
-where I: Iterator<Item = ast::Token>
+impl<I> ParseState<I>
+where
+    I: Iterator<Item = ast::Token>,
 {
     fn parse_expr(&mut self) -> ast::Expr {
         if let Some(token) = self.0.next() {
@@ -104,6 +147,7 @@ where I: Iterator<Item = ast::Token>
                 LeftBracket => self.parse_form(token),
                 RightBracket => panic!("unexpected token!"),
                 Number(n) => ast::Expr::Number(token, n),
+                Str(s) => ast::Expr::Str(s[1..].into()),
                 Symbol(ref s) => {
                     let sym = s.clone();
                     ast::Expr::Symbol(token, sym)
@@ -134,20 +178,14 @@ where I: Iterator<Item = ast::Token>
                         Box::new(false_then),
                         close,
                     )
-                },
+                }
                 "setq" => {
                     let define_tok = self.0.next().unwrap();
                     let sym_tok = self.0.next().unwrap();
                     let value = self.parse_expr();
                     let close = self.0.next().unwrap();
-                    ast::Expr::Define(
-                        open,
-                        define_tok,
-                        sym_tok,
-                        Box::new(value),
-                        close
-                    )
-                },
+                    ast::Expr::Define(open, define_tok, sym_tok, Box::new(value), close)
+                }
                 _ => {
                     let sym_tok = self.0.next().unwrap();
                     let mut args = Vec::new();
@@ -158,15 +196,10 @@ where I: Iterator<Item = ast::Token>
                         args.push(self.parse_expr());
                     }
                     let close = self.0.next().unwrap();
-                    ast::Expr::Call(
-                        open,
-                        sym_tok,
-                        args,
-                        close
-                    )
+                    ast::Expr::Call(open, sym_tok, args, close)
                 }
             },
-            _ => panic!("invalid expression"),
+            other => panic!("invalid expression -> {:?}", other),
         }
     }
 }
@@ -180,3 +213,51 @@ pub fn parse(source: &str) -> ast::Expr {
     ParseState(tokens.into_iter().peekable()).parse_expr()
 }
 
+#[cfg(test)]
+mod test_parse {
+    use crate::{ast, parse};
+    use ast::{Expr, Token, TokenKind};
+    use big_s::S;
+    use codespan::*;
+
+    #[test]
+    fn tokenise_symbol() {
+        let str = "(+ n 1)";
+        let tokens = vec![
+            ast::TokenKind::LeftBracket,
+            ast::TokenKind::Symbol(S("+")),
+            ast::TokenKind::Symbol(S("n")),
+            ast::TokenKind::Number(1),
+            ast::TokenKind::RightBracket,
+        ];
+
+        assert!(parse::tokenise(str)
+            .iter()
+            .map(|t| t.kind.clone())
+            .collect::<Vec<_>>()
+            .eq(&tokens));
+    }
+
+    #[test]
+    fn parse_expr() {
+        let src = "(if 1 1 2)";
+        assert_eq!(
+            parse::parse(src),
+            Expr::If(
+                Token::with_span(TokenKind::LeftBracket, Span::new(1, 2)),
+                Token::with_span(TokenKind::Symbol(S("if")), Span::new(2, 4)),
+                Box::new(create_number(1, (5, 6))),
+                Box::new(create_number(1, (7, 8))),
+                Box::new(create_number(2, (9, 10))),
+                Token::with_span(TokenKind::RightBracket, Span::new(10, 11))
+            )
+        );
+    }
+
+    fn create_number(n: i64, span: (u32, u32)) -> Expr {
+        Expr::Number(
+            Token::with_span(TokenKind::Number(n), Span::new(span.0, span.1)),
+            n,
+        )
+    }
+}

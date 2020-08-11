@@ -2,20 +2,22 @@
 extern crate clap;
 
 mod ast;
-mod parse;
-mod eval;
 mod env;
+mod eval;
+mod parse;
 
 fn main() {
-    let matches = clap_app!(alone => 
-            (version:   crate_version!())
-            (author:    crate_authors!())
-            (about:     crate_description!())
-            (@arg file: "source file")
-        ).get_matches();
+    let matches = clap_app!(alone =>
+        (version:   crate_version!())
+        (author:    crate_authors!())
+        (about:     crate_description!())
+        (@arg file: "source file")
+    )
+    .get_matches();
 
     if matches.is_present("file") {
-        let source = std::fs::read_to_string(matches.value_of("file").unwrap()).expect("Can't read file");
+        let source =
+            std::fs::read_to_string(matches.value_of("file").unwrap()).expect("Can't read file");
         print(eval::eval(parse::parse(&source)));
     } else {
         println!("{}", crate_description!());
@@ -32,7 +34,9 @@ fn read() -> ast::Expr {
 
     print!("Alone > ");
     std::io::stdout().flush().expect("Can't flush stdout");
-    std::io::stdin().read_line(&mut buf).expect("Can't read from stdin");
+    std::io::stdin()
+        .read_line(&mut buf)
+        .expect("Can't read from stdin");
     parse::parse(&buf)
 }
 
