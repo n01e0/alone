@@ -110,7 +110,7 @@ fn tokenise(source: &str) -> Vec<ast::Token> {
         }
 
         let token_str = match state {
-            Str => &source[start+1..end],
+            Str => &source[start + 1..end],
             _ => &source[start..end],
         };
         let span = Span::new(ByteIndex::from(start as u32), ByteIndex::from(end as u32));
