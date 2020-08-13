@@ -19,6 +19,17 @@ impl Cons {
     pub fn cdr(&self) -> Value {
         *self.1.clone()
     }
+
+    pub fn append(&mut self, value: Value) -> Self {
+        match *self.1.clone() {
+            Value::Nil => {
+                self.1 = Box::new(Value::Cons(Cons::new(value, Value::Nil)));
+                return self.clone();
+            }
+            Value::Cons(mut cons) => return cons.append(value),
+            _ => panic!("Can't append"),
+        }
+    }
 }
 
 #[derive(Debug, PartialEq, Clone)]
