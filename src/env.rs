@@ -191,6 +191,25 @@ pub fn make_global_env() -> HashMap<String, Value> {
     );
 
     env.insert(
+        S("list"),
+        Value::Callable(|values| {
+            if values.len() > 1 {
+                let (first, rest) = values.split_first().unwrap();
+                let mut ret = Cons::new(first.clone(), Value::Nil);
+                for value in rest {
+                    ret.append(value.clone());
+                }
+                Ok(Value::Cons(ret))
+            } else {
+                Ok(Value::Cons(Cons::new(
+                    values.first().unwrap().clone(),
+                    Value::Nil,
+                )))
+            }
+        }),
+    );
+
+    env.insert(
         S("cons"),
         Value::Callable(|values| {
             if let Some((a, b)) = values.iter().next_tuple() {

@@ -24,9 +24,9 @@ impl Cons {
         match *self.1.clone() {
             Value::Nil => {
                 self.1 = Box::new(Value::Cons(Cons::new(value, Value::Nil)));
-                return self.clone();
+                self.clone()
             }
-            Value::Cons(mut cons) => return cons.append(value),
+            Value::Cons(mut cons) => cons.append(value),
             _ => panic!("Can't append"),
         }
     }
