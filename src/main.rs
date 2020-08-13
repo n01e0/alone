@@ -11,6 +11,7 @@ fn main() {
         (version:   crate_version!())
         (author:    crate_authors!())
         (about:     crate_description!())
+        (@arg quiet: -q --quiet "without banner")
         (@arg file: "source file")
     )
     .get_matches();
@@ -20,7 +21,9 @@ fn main() {
             std::fs::read_to_string(matches.value_of("file").unwrap()).expect("Can't read file");
         print(eval::eval(parse::parse(&source)));
     } else {
-        println!("{}", crate_description!());
+        if !matches.is_present("quiet") {
+            println!("{}", crate_description!());
+        }
         let mut env = env::make_global_env();
         loop {
             print(eval::eval_with_env(read(), &mut env))
